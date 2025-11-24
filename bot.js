@@ -142,6 +142,7 @@ bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     const userName = msg.from.first_name;
 
+    // Сбрасываем состояние пользователя
     userStates.set(chatId, {
         currentQuestion: 0,
         score: 0,
@@ -151,16 +152,19 @@ bot.onText(/\/start/, (msg) => {
     const welcomeText = `
 Привет, ${userName}! 👋
 
-🎮 **Добро пожаловать в игру "Угадай сленг"!**
+🎮 Добро пожаловать в игру "Угадай сленг"!
 
 Я покажу 20 современных слов, а ты угадаешь их значение.
 После ответа я дам подробное объяснение!
 
-**Давай начнём! 🚀**
+Давай начнём! 🚀
     `.trim();
 
     bot.sendMessage(chatId, welcomeText, { parse_mode: 'Markdown' })
-        .then(() => sendQuestion(chatId));
+        .then(() => {
+            // Небольшая задержка перед первым вопросом
+            setTimeout(() => sendQuestion(chatId), 1000);
+        });
 });
 
 // Команда /help
@@ -168,11 +172,11 @@ bot.onText(/\/help/, (msg) => {
     const chatId = msg.chat.id;
     
     const helpText = `
-🎮 **Игра "Угадай сленг"**
+🎮 Игра "Угадай сленг"
 
 Угадай значение 20 современных слов!
 
-**Команды:**
+Команды:
 /start - начать игру
 /stop - остановить игру
 /help - помощь
@@ -208,7 +212,7 @@ function sendQuestion(chatId) {
     const questionText = `
 📝 Вопрос ${questionNumber}/20
 
-🔤 **Слово: ${questionData.word}**
+🔤 Слово: ${questionData.word}
 
 Что оно означает?
 
@@ -226,7 +230,7 @@ function sendQuestion(chatId) {
                 [{ text: '/stop' }]
             ],
             resize_keyboard: true,
-            one_time_keyboard: true
+            one_time_keyboard: false
         }
     };
 
@@ -240,6 +244,9 @@ function sendQuestion(chatId) {
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
     const text = msg.text?.toUpperCase();
+    
+    // Игнорируем команды
+    if (text?.startsWith('/')) return;
     
     if (!['A', 'B', 'C'].includes(text)) {
         return;
@@ -255,26 +262,27 @@ bot.on('message', (msg) => {
     const questionData = WORDS_DB[questionIndex];
     
     const correctAnswer = ['A', 'B', 'C'][questionData.correctIndex];
-    const userAnswerIndex = ['A', 'B', 'C'].indexOf(text);
     
     if (text === correctAnswer) {
         userState.score++;
-        bot.sendMessage(chatId, "✅ **Правильно!** 🎉", { parse_mode: 'Markdown' });
+        bot.sendMessage(chatId, "✅ Правильно! 🎉", { parse_mode: 'Markdown' });
     } else {
-        bot.sendMessage(chatId, `❌ **Неправильно!** Правильно: ${correctAnswer}`, { parse_mode: 'Markdown' });
+        bot.sendMessage(chatId, `❌ Неправильно! Правильно: ${correctAnswer}`, { parse_mode: 'Markdown' });
     }
     
+    // Объяснение
     bot.sendMessage(chatId, questionData.explanation, { parse_mode: 'Markdown' });
     
+    // Следующий вопрос
     userState.currentQuestion++;
     
     if (userState.currentQuestion < WORDS_DB.length) {
         setTimeout(() => {
-            bot.sendMessage(chatId, "➡️ **Следующее слово...**", { parse_mode: 'Markdown' })
-                .then(() => sendQuestion(chatId));
-        }, 1500);
+            bot.sendMessage(chatId, "➡️ Следующее слово...", { parse_mode: 'Markdown' });
+            setTimeout(() => sendQuestion(chatId), 1000);
+        }, 2000);
     } else {
-        finishGame(chatId);
+        setTimeout(() => finishGame(chatId), 2000);
     }
 });
 
@@ -299,7 +307,7 @@ function finishGame(chatId) {
     }
 
     const resultsText = `
-🏁 **Игра завершена!**
+🏁 Игра завершена!
 
 📊 Результат: ${score}/20
 📈 Правильных ответов: ${Math.round(percentage)}%
