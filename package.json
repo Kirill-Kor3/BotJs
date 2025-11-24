@@ -1,0 +1,17 @@
+{
+  "name": "teen-slang-bot",
+  "version": "1.0.0",
+  "description": "Telegram бот для угадывания подросткового сленга",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "nodemon bot.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.64.0",
+    "dotenv": "^16.3.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
